@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 
@@ -54,159 +54,150 @@ const Board = (props) => {
   return <div>{renderBoard()}</div>;
 };
 
-class Game extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      history: [
-        {
-          squares: Array(9).fill(null),
-          lastSquare: null,
-          winner: null,
-        },
-      ],
-      stepNumber: 0,
-      xIsNext: true,
-      isAscendingHistory: true,
-    };
-  }
+const Game = (props) => {
+  const maximumMoves = 9;
+  const [histories, setHistories] = useState([
+    {
+      squares: Array(9).fill(null),
+      lastSquare: null,
+      winner: null,
+    },
+  ]);
+  const [moveNumber, setMoveNumber] = useState(0);
+  const [isAscendingHistory, setIsAscendingHistory] = useState(true);
 
-  getSymbol(stepNumber) {
-    return stepNumber % 2 === 0 ? "X" : "O";
-  }
+  const getSymbol = (currentMoveNumber) => {
+    return currentMoveNumber % 2 === 0 ? "X" : "O";
+  };
 
-  getNextSymbol() {
-    return this.state.xIsNext ? "X" : "O";
-  }
+  const getNextSymbol = () => {
+    return getSymbol(moveNumber);
+  };
 
-  handleClick(i) {
-    const history = this.state.history.slice(0, this.state.stepNumber + 1);
-    const current = history[history.length - 1];
+  const calculateWinner = (squares) => {
+    const lines = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8],
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8],
+      [0, 4, 8],
+      [2, 4, 6],
+    ];
+    for (let i = 0; i < lines.length; i++) {
+      const [a, b, c] = lines[i];
+      if (
+        squares[a] &&
+        squares[a] === squares[b] &&
+        squares[a] === squares[c]
+      ) {
+        return {
+          symbol: squares[a],
+          lines: lines[i],
+        };
+      }
+    }
+    return null;
+  };
 
-    const isSquareFilled = !!current.squares[i];
+  const onClickHistory = (moveNumber) => {
+    setMoveNumber(moveNumber);
+  };
+
+  const onClickHistorySortToggle = () => {
+    setIsAscendingHistory(!isAscendingHistory);
+  };
+
+  const onClickSquare = (i) => {
+    // current history may defers if user "time travel" to past moves
+    const activeHistories = histories.slice(0, moveNumber + 1);
+    const lastActiveMove = activeHistories[activeHistories.length - 1];
+
+    const isSquareFilled = !!lastActiveMove.squares[i];
     if (isSquareFilled) return;
-    const hasWinner = !!current.winner;
+    const hasWinner = !!lastActiveMove.winner;
     if (hasWinner) return;
 
-    const squares = current.squares.slice();
-    squares[i] = this.getNextSymbol();
+    const squares = [...lastActiveMove.squares];
+    squares[i] = getNextSymbol();
     const winner = calculateWinner(squares);
-    this.setState({
-      history: history.concat([
-        {
-          squares: squares,
-          lastSquare: i,
-          winner: winner,
-        },
-      ]),
-      stepNumber: history.length,
-      xIsNext: !this.state.xIsNext,
-    });
+    setHistories([
+      ...activeHistories,
+      {
+        squares: squares,
+        lastSquare: i,
+        winner: winner,
+      },
+    ]);
+    setMoveNumber(activeHistories.length);
+  };
+
+  const lastMove = histories[moveNumber];
+  const hasWinner = !!lastMove.winner;
+  const isOutOfMove = moveNumber === maximumMoves;
+  const outOfMoveClass = !hasWinner && isOutOfMove ? "out-of-move" : "";
+  let status;
+  if (hasWinner) {
+    status = `Winner: ${lastMove.winner.symbol}`;
+  } else if (isOutOfMove) {
+    status = `Out of moves!`;
+  } else {
+    status = `Next player: ${getNextSymbol()}`;
   }
-
-  jumpTo(step) {
-    this.setState({
-      stepNumber: step,
-      xIsNext: this.getSymbol(step) === "X",
-    });
-  }
-
-  toggleIsAscendingHistory() {
-    this.setState({
-      isAscendingHistory: !this.state.isAscendingHistory,
-    });
-  }
-
-  render() {
-    const history = this.state.history;
-    const current = history[this.state.stepNumber];
-    const hasWinner = !!current.winner;
-    const isOutOfMove = this.state.stepNumber === 9;
-    const outOfMoveClass = !hasWinner && isOutOfMove ? "out-of-move" : "";
-    let status;
-    if (hasWinner) {
-      status = `Winner: ${current.winner.symbol}`;
-    } else if (isOutOfMove) {
-      status = `Out of moves!`;
-    } else {
-      status = `Next player: ${this.getNextSymbol()}`;
-    }
-    const moves = history.map((step, move) => {
-      const isFirstMove = move === 0;
-      const isCurrentMove = move === this.state.stepNumber;
-      const lastSquareSymbol = isFirstMove ? null : this.getSymbol(move - 1);
-      const lastSquareColumn = (step.lastSquare % 3) + 1;
-      const lastSquareRow = Math.trunc(step.lastSquare / 3) + 1;
-      const description = isFirstMove
-        ? `Go to game start`
-        : `Go to move # ${move}: ${lastSquareSymbol} (${lastSquareColumn}, ${lastSquareRow})`;
-
-      return (
-        <li key={move}>
-          <button
-            className={isCurrentMove ? "is-current" : ""}
-            onClick={() => this.jumpTo(move)}
-          >
-            {description}
-          </button>
-        </li>
-      );
-    });
-    const sortedMoves = this.state.isAscendingHistory ? moves : moves.reverse();
+  const historyMoves = histories.map((history, index) => {
+    const isFirstMove = index === 0;
+    const isCurrentMove = index === moveNumber;
+    const historyMoveSymbol = isFirstMove ? null : getSymbol(index - 1);
+    const historyMoveBoardColumn = (history.lastSquare % 3) + 1;
+    const historyMoveBoardRow = Math.trunc(history.lastSquare / 3) + 1;
+    const description = isFirstMove
+      ? `Go to game start`
+      : `Go to move # ${index}: ${historyMoveSymbol} (${historyMoveBoardColumn}, ${historyMoveBoardRow})`;
 
     return (
-      <React.StrictMode>
-        <div className="game">
-          <div className={`game-board ${outOfMoveClass}`}>
-            <Board
-              {...current}
-              onClick={(i) => this.handleClick(i)}
-            />
-          </div>
-          <div className="game-info">
-            <div>{status}</div>
-            <div>
-              <span>
-                History Sort:{" "}
-                {this.state.isAscendingHistory ? "Ascending" : "Descending"}
-              </span>
-              <span>&nbsp;</span>
-              <button onClick={() => this.toggleIsAscendingHistory()}>
-                Toggle
-              </button>
-            </div>
-            <ol>{sortedMoves}</ol>
-          </div>
-        </div>
-      </React.StrictMode>
+      <li key={index}>
+        <button
+          className={isCurrentMove ? "is-current" : ""}
+          onClick={() => onClickHistory(index)}
+        >
+          {description}
+        </button>
+      </li>
     );
-  }
-}
+  });
+  const sortedMoves = isAscendingHistory
+    ? historyMoves
+    : historyMoves.reverse();
+
+  return (
+    <div className="game">
+      <div className={`game-board ${outOfMoveClass}`}>
+        <Board
+          {...lastMove}
+          onClick={(i) => onClickSquare(i)}
+        />
+      </div>
+      <div className="game-info">
+        <div>{status}</div>
+        <div>
+          <span>
+            History Sort: {isAscendingHistory ? "Ascending" : "Descending"}
+          </span>
+          <span>&nbsp;</span>
+          <button onClick={() => onClickHistorySortToggle()}>Toggle</button>
+        </div>
+        <ol>{sortedMoves}</ol>
+      </div>
+    </div>
+  );
+};
 
 // ========================================
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(<Game />);
-
-function calculateWinner(squares) {
-  const lines = [
-    [0, 1, 2],
-    [3, 4, 5],
-    [6, 7, 8],
-    [0, 3, 6],
-    [1, 4, 7],
-    [2, 5, 8],
-    [0, 4, 8],
-    [2, 4, 6],
-  ];
-  for (let i = 0; i < lines.length; i++) {
-    const [a, b, c] = lines[i];
-    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return {
-        symbol: squares[a],
-        lines: lines[i],
-      };
-    }
-  }
-  return null;
-}
+root.render(
+  <React.StrictMode>
+    <Game />
+  </React.StrictMode>
+);
