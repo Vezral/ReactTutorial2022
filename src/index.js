@@ -1,17 +1,17 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom/client";
-import "./index.css";
+import "./index.scss";
 
 const Square = (props) => {
   const isHighlightClass = props.isHighlight ? "is-highlight" : "";
 
   return (
-    <button
+    <div
       className={`square ${isHighlightClass}`}
       onClick={() => props.onClick()}
     >
       {props.value}
-    </button>
+    </div>
   );
 };
 
@@ -34,24 +34,17 @@ const Board = (props) => {
     const board = Array(3)
       .fill(null)
       .map((outerValue, outerIndex) => {
-        return (
-          <div
-            key={`outer ${outerIndex}`}
-            className="board-row"
-          >
-            {Array(3)
-              .fill(null)
-              .map((innerValue, innerIndex) => {
-                const squareIndex = outerIndex * 3 + innerIndex;
-                return renderSquare(squareIndex);
-              })}
-          </div>
-        );
+        return Array(3)
+          .fill(null)
+          .map((innerValue, innerIndex) => {
+            const squareIndex = outerIndex * 3 + innerIndex;
+            return renderSquare(squareIndex);
+          });
       });
     return board;
   };
 
-  return <div>{renderBoard()}</div>;
+  return <>{renderBoard()}</>;
 };
 
 const Game = (props) => {
@@ -136,6 +129,7 @@ const Game = (props) => {
   const lastMove = histories[moveNumber];
   const hasWinner = !!lastMove.winner;
   const isOutOfMove = moveNumber === maximumMoves;
+  const gameEndedClass = hasWinner || isOutOfMove ? "game-ended" : "";
   const outOfMoveClass = !hasWinner && isOutOfMove ? "out-of-move" : "";
   let status;
   if (hasWinner) {
@@ -172,7 +166,7 @@ const Game = (props) => {
 
   return (
     <div className="game">
-      <div className={`game-board ${outOfMoveClass}`}>
+      <div className={`game-board ${gameEndedClass} ${outOfMoveClass}`}>
         <Board
           {...lastMove}
           onClick={(i) => onClickSquare(i)}
