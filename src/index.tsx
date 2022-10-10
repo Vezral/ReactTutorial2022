@@ -2,30 +2,57 @@ import React, { useState } from "react";
 import ReactDOM from "react-dom/client";
 import "./index.scss";
 
-const Square = (props) => {
+type SquareProp = {
+  index: number;
+  value: string;
+  isHighlight: boolean;
+  onClick: OnClickSquare;
+};
+
+type BoardProp = History & {
+  onClick: OnClickSquare;
+};
+
+type OnClickSquare = (clickedSquareIndex: number) => void;
+
+type Square = string[];
+
+type History = {
+  squares: Square;
+  lastSquare: number | null;
+  winner: Winner | null;
+};
+
+type Winner = {
+  symbol: string;
+  lines: number[];
+};
+
+const Square = (props: SquareProp) => {
   const isHighlightClass = props.isHighlight ? "is-highlight" : "";
 
   return (
     <div
       className={`square ${isHighlightClass}`}
-      onClick={() => props.onClick()}
+      onClick={() => props.onClick(props.index)}
     >
       {props.value}
     </div>
   );
 };
 
-const Board = (props) => {
-  const renderSquare = (i) => {
+const Board = (props: BoardProp): JSX.Element => {
+  const renderSquare = (squareIndex: number) => {
     const isWinningSquare =
-      props.winner?.lines.some((value) => value === i) ?? false;
+      props.winner?.lines.some((value) => value === squareIndex) ?? false;
 
     return (
       <Square
-        key={i}
-        value={props.squares[i]}
+        key={squareIndex}
+        index={squareIndex}
+        value={props.squares[squareIndex]}
         isHighlight={isWinningSquare}
-        onClick={() => props.onClick(i)}
+        onClick={props.onClick}
       />
     );
   };
@@ -47,27 +74,27 @@ const Board = (props) => {
   return <>{renderBoard()}</>;
 };
 
-const Game = (props) => {
+const Game = (): JSX.Element => {
   const maximumMoves = 9;
-  const [histories, setHistories] = useState([
+  const [histories, setHistories] = useState<History[]>([
     {
       squares: Array(9).fill(null),
       lastSquare: null,
       winner: null,
     },
   ]);
-  const [moveNumber, setMoveNumber] = useState(0);
-  const [isAscendingHistory, setIsAscendingHistory] = useState(true);
+  const [moveNumber, setMoveNumber] = useState<number>(0);
+  const [isAscendingHistory, setIsAscendingHistory] = useState<boolean>(true);
 
-  const getSymbol = (currentMoveNumber) => {
+  const getSymbol = (currentMoveNumber: number): string => {
     return currentMoveNumber % 2 === 0 ? "X" : "O";
   };
 
-  const getNextSymbol = () => {
+  const getNextSymbol = (): string => {
     return getSymbol(moveNumber);
   };
 
-  const calculateWinner = (squares) => {
+  const calculateWinner = (squares: Square): Winner | null => {
     const lines = [
       [0, 1, 2],
       [3, 4, 5],
@@ -94,32 +121,32 @@ const Game = (props) => {
     return null;
   };
 
-  const onClickHistory = (moveNumber) => {
+  const onClickHistory = (moveNumber: number): void => {
     setMoveNumber(moveNumber);
   };
 
-  const onClickHistorySortToggle = () => {
+  const onClickHistorySortToggle = (): void => {
     setIsAscendingHistory(!isAscendingHistory);
   };
 
-  const onClickSquare = (i) => {
+  const onClickSquare: OnClickSquare = (clickedSquareIndex) => {
     // current history may defers if user "time travel" to past moves
     const activeHistories = histories.slice(0, moveNumber + 1);
     const lastActiveMove = activeHistories[activeHistories.length - 1];
 
-    const isSquareFilled = !!lastActiveMove.squares[i];
+    const isSquareFilled = !!lastActiveMove.squares[clickedSquareIndex];
     if (isSquareFilled) return;
     const hasWinner = !!lastActiveMove.winner;
     if (hasWinner) return;
 
     const squares = [...lastActiveMove.squares];
-    squares[i] = getNextSymbol();
+    squares[clickedSquareIndex] = getNextSymbol();
     const winner = calculateWinner(squares);
     setHistories([
       ...activeHistories,
       {
         squares: squares,
-        lastSquare: i,
+        lastSquare: clickedSquareIndex,
         winner: winner,
       },
     ]);
@@ -133,7 +160,7 @@ const Game = (props) => {
   const outOfMoveClass = !hasWinner && isOutOfMove ? "out-of-move" : "";
   let status;
   if (hasWinner) {
-    status = `Winner: ${lastMove.winner.symbol}`;
+    status = `Winner: ${lastMove.winner!.symbol}`;
   } else if (isOutOfMove) {
     status = `Out of moves!`;
   } else {
@@ -143,8 +170,8 @@ const Game = (props) => {
     const isFirstMove = index === 0;
     const isCurrentMove = index === moveNumber;
     const historyMoveSymbol = isFirstMove ? null : getSymbol(index - 1);
-    const historyMoveBoardColumn = (history.lastSquare % 3) + 1;
-    const historyMoveBoardRow = Math.trunc(history.lastSquare / 3) + 1;
+    const historyMoveBoardColumn = (history.lastSquare! % 3) + 1;
+    const historyMoveBoardRow = Math.trunc(history.lastSquare! / 3) + 1;
     const description = isFirstMove
       ? `Go to game start`
       : `Go to move # ${index}: ${historyMoveSymbol} (${historyMoveBoardColumn}, ${historyMoveBoardRow})`;
@@ -169,7 +196,7 @@ const Game = (props) => {
       <div className={`game-board ${gameEndedClass} ${outOfMoveClass}`}>
         <Board
           {...lastMove}
-          onClick={(i) => onClickSquare(i)}
+          onClick={onClickSquare}
         />
       </div>
       <div className="game-info">
@@ -189,7 +216,7 @@ const Game = (props) => {
 
 // ========================================
 
-const root = ReactDOM.createRoot(document.getElementById("root"));
+const root = ReactDOM.createRoot(document.getElementById("root")!);
 root.render(
   <React.StrictMode>
     <Game />
