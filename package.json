@@ -15,7 +15,10 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "docker-build": "docker build . -t vezral/react-tutorial-2022",
+    "docker-push": "docker push vezral/react-tutorial-2022",
+    "docker-build-push": "npm run docker-build && npm run docker-push"
   },
   "eslintConfig": {
     "extends": [
