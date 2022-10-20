@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Board } from "../board/board";
+import "./game.scss";
 
 export type OnClickSquare = (clickedSquareIndex: number) => void;
 export type Square = Array<string | null>;

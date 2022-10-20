@@ -1,5 +1,5 @@
-import React from "react";
 import { OnClickSquare } from "../game/game";
+import "./square.scss";
 
 type SquareProp = {
   index: number;

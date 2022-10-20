@@ -1,0 +1,15 @@
+.game {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: flex-start;
+
+  .game-info {
+    margin-left: 20px;
+
+    button {
+      &.is-current {
+        font-weight: bold;
+      }
+    }
+  }
+}

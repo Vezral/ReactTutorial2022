@@ -1,6 +1,6 @@
-import React from "react";
 import { GameHistory, OnClickSquare } from "../game/game";
 import { Square } from "../square/square";
+import "./board.scss";
 
 type BoardProp = GameHistory & {
   onClick: OnClickSquare;

@@ -1,0 +1,19 @@
+.square {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  border-width: 0px 0px 1px 1px;
+  border-style: solid;
+  border-color: #000;
+  background: #fff;
+  width: 34px;
+  height: 34px;
+  font-weight: bold;
+  font-size: 24px;
+  user-select: none;
+
+  &.is-highlight {
+    background: yellow;
+  }
+}

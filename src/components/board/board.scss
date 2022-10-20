@@ -1,0 +1,17 @@
+.game-board {
+  display: grid;
+  grid-template-columns: repeat(3, 35px);
+  border-width: 1px 1px 0px 0px;
+  border-style: solid;
+  border-color: #000;
+
+  &.game-ended {
+    .square {
+      cursor: not-allowed;
+    }
+  }
+
+  &.out-of-move {
+    opacity: 0.5;
+  }
+}
