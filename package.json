@@ -16,7 +16,9 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "docker-build": "docker build . -t vezral/react-tutorial-2022",
+    "dev": "docker compose -f docker-compose.yaml -f docker-compose.dev.yaml up --build",
+    "prod": "docker compose -f docker-compose.yaml -f docker-compose.prod.yaml up --build",
+    "docker-build": "docker build -f Dockerfile.prod -t vezral/react-tutorial-2022",
     "docker-push": "docker push vezral/react-tutorial-2022",
     "docker-build-push": "npm run docker-build && npm run docker-push"
   },
